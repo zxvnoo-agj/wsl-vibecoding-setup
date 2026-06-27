@@ -1,0 +1,4 @@
+interface:
+  display_name: "WSL Vibecoding Setup"
+  short_description: "Configure Windows WSL Ubuntu for AI coding workflows."
+  default_prompt: "Use $wsl-vibecoding-setup to plan and automate a Windows 10/11 WSL Ubuntu vibecoding development environment."
