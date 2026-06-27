@@ -13,9 +13,9 @@ Use this skill to turn a Windows machine into a Linux-native coding environment 
 
 Structure setup plans around these six stages:
 
-1. **WSL installation**: check whether `wsl.exe` exists, print `wsl --status`, `wsl --version` when available, and `wsl --list --verbose`; install WSL only when missing or unusable; download/install Ubuntu; guide first-launch Linux username/password creation; configure `%UserProfile%\.wslconfig` with mirrored networking when appropriate; run curl connectivity tests.
-2. **Node.js and mirrors**: install base Ubuntu packages, nvm, Node.js, npm, and configure an npm registry mirror such as `https://registry.npmmirror.com` unless the user opts out or provides another registry.
-3. **Agent CLI selection**: ask which agent CLI to install when the user has not specified one. Offer exactly these choices: `opencode`, `codex`, `claude`; allow multiple choices or `none`. Never install an agent CLI silently.
+1. **WSL installation**: check whether `wsl.exe` exists, print `wsl --status`, `wsl --version` when available, and `wsl --list --verbose`; install WSL only when missing or unusable; download/install Ubuntu; guide first-launch Linux username/password creation; configure `%UserProfile%\.wslconfig` with mirrored networking when appropriate; run curl connectivity tests. Run long `wsl --install` operations in a visible PowerShell window by default, because distro downloads can stay silent for several minutes.
+2. **Node.js and mirrors**: install base Ubuntu packages, nvm, Node.js, npm, and configure an npm registry mirror such as `https://registry.npmmirror.com` unless the user opts out or provides another registry. After install, verify `command -v node` and `command -v npm` do not resolve into `/mnt/c`, `/mnt/d`, or another Windows-mounted path.
+3. **Agent CLI selection**: ask which agent CLI to install when the user has not specified one. Offer exactly these choices: `opencode`, `codex`, `claude`; allow multiple choices or `none`. Never install an agent CLI silently. Treat these CLIs as optional stages: if one installer fails, preserve the completed base environment and report a retry command instead of implying the whole setup failed.
 4. **VS Code guidance**: install or guide installation of the VS Code Remote - WSL extension so VS Code can open files inside WSL. Mention Cursor only as an equivalent editor path when the user uses Cursor.
 5. **Project location recommendation**: recommend keeping projects under the WSL filesystem, for example `~/code`, and avoid active development under `/mnt/c` or other Windows-mounted paths.
 6. **Desktop launcher**: generate or guide the user to generate a Desktop launcher script that opens the chosen Ubuntu distro directly, so double-clicking enters the environment.
@@ -29,7 +29,10 @@ Structure setup plans around these six stages:
 2. Check permission boundaries before acting. Codex usually cannot change BIOS/UEFI virtualization, approve UAC, complete Microsoft Store GUI actions, create the first Ubuntu user, finish browser logins, or handle secrets. For those steps, guide the user instead of pretending they are automatable.
 3. Keep project files in the Linux filesystem, for example `~/code/project`, not `/mnt/c/...`, when Linux tools or AI agents will run tests, package managers, or file watchers.
 4. Never put API keys or login tokens into setup scripts. Install CLIs, then let the user authenticate interactively with `opencode`, `codex`, `claude`, `gh auth login`, or provider-specific flows.
-5. Treat WSL install as a two-phase process: Windows feature/distro installation may require a reboot; first Ubuntu launch may require creating the Linux user before automation can continue.
+5. Treat WSL install as a two-phase process: Windows feature/distro installation may require a reboot; first Ubuntu launch may require creating the Linux user before automation can continue. If Ubuntu starts as `root`, stop and guide the user to create a normal sudo user and set `/etc/wsl.conf` before running developer tooling.
+6. Before each mutable stage, re-check current state. In particular, immediately re-run `wsl --list --quiet` before invoking `wsl --install -d <Distro>` so a concurrent or just-finished installer does not cause duplicate registration errors.
+7. Do not restart a second WSL install merely because there is no output. If an install appears quiet, first inspect `wsl --list --verbose`, look for a still-open visible installer window, and ask the user what the window shows.
+8. Avoid fragile one-line PowerShell -> WSL -> Bash command chains for complex logic. Copy or generate a temporary `.sh` file in WSL, then execute that script with quoted arguments.
 
 ## Automated Setup
 
@@ -51,6 +54,8 @@ The script prompts for agent CLI choices when none are passed. Useful non-intera
 ```
 
 If the script stops after installing WSL or Ubuntu, restart Windows if requested, open Ubuntu once from Start Menu to create the Linux username/password, then rerun the script.
+
+The script is intended to be safely rerunnable. On rerun it checks for leftover setup processes, rechecks the distro list before installation, uses a visible installer window for `wsl --install`, and resumes from completed stages where possible.
 
 ## Ubuntu Bootstrap Only
 
@@ -81,7 +86,7 @@ After setup, verify:
 
 ```bash
 wsl.exe --list --verbose
-wsl.exe -d Ubuntu-24.04 -- bash -lc 'uname -a; git --version; node -v; npm -v; npm config get registry'
+wsl.exe -d Ubuntu-24.04 -- bash -lc 'id -un; git --version; node -v; npm -v; npm config get registry; rg --version | head -n 1; command -v codex || true; codex --version 2>/dev/null || true; ls -ld ~/code'
 ```
 
 Inside Ubuntu:

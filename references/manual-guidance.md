@@ -32,6 +32,14 @@ wsl --list --online
 wsl --install -d Ubuntu-24.04
 ```
 
+For `wsl --install`, prefer a visible Administrator PowerShell window. Distro downloads can be silent for several minutes. If there is no output but the process/window is still open, do not start a second install. First check:
+
+```powershell
+wsl --list --verbose
+```
+
+If the distro appears as `Running` or `Stopped`, continue to first launch. If it does not appear, ask the user what the visible installer window shows.
+
 If modern WSL install is unavailable, guide the user to enable Windows features manually:
 
 ```powershell
@@ -84,6 +92,23 @@ Then Codex or the user can run:
 wsl -d Ubuntu-24.04 -- bash -lc "id -un && uname -a"
 ```
 
+If `id -un` prints `root`, create a normal user and make it the WSL default user:
+
+```bash
+adduser <your-linux-username>
+usermod -aG sudo <your-linux-username>
+printf '[user]\ndefault=<your-linux-username>\n' > /etc/wsl.conf
+```
+
+Then from Windows:
+
+```powershell
+wsl --shutdown
+wsl -d Ubuntu-24.04 -- bash -lc "id -un && sudo -v"
+```
+
+Success means `id -un` prints the normal username, not `root`, and `sudo -v` accepts that user's Linux password.
+
 ## Editor and WSL Project Flow
 
 Recommended flow:
@@ -112,6 +137,17 @@ npm config set registry https://registry.npmjs.org/
 ```
 
 Do not rewrite project lockfiles just to change mirrors.
+
+After Node setup, check that WSL is not accidentally using Windows Node/npm from a mounted drive:
+
+```bash
+command -v node
+command -v npm
+```
+
+If either path starts with `/mnt/c`, `/mnt/d`, or another `/mnt/*` path, load nvm earlier in `~/.bashrc`, open a new shell, and verify again before installing agent CLIs.
+
+Avoid complex one-line commands that cross PowerShell, `wsl.exe`, and Bash when they contain `$HOME`, `$PATH`, `$NVM_DIR`, `$(...)`, or nested quotes. Generate a temporary `.sh` file inside WSL and run that file instead.
 
 ## Network and China Mainland Notes
 
@@ -164,7 +200,8 @@ If Codex cannot write to the user's Desktop, ask the user to create `Vibecoding 
 ```bat
 @echo off
 title Vibecoding Ubuntu-24.04
-wsl.exe -d "Ubuntu-24.04" --cd ~
+wsl.exe -d Ubuntu-24.04 --cd ~
+if errorlevel 1 pause
 ```
 
 Success means double-clicking the file opens an interactive Ubuntu shell in the home directory. If it closes immediately, run `wsl -l -v` and replace `Ubuntu-24.04` with the exact distro name.
@@ -175,16 +212,35 @@ Ask the user to run inside Ubuntu:
 
 ```bash
 cd ~/code
-uname -a
+id -un
 git --version
 node -v
 npm -v
 npm config get registry
-rg --version
+rg --version | head -n 1
 command -v code >/dev/null && code --version | head -n 1 || true
 command -v cursor >/dev/null && cursor --version | head -n 1 || true
 command -v gh >/dev/null && gh --version | head -n 1 || true
+command -v codex || true
 command -v opencode >/dev/null && opencode --version || true
 command -v codex >/dev/null && codex --version || true
 command -v claude >/dev/null && claude --version || true
+ls -ld ~/code
+```
+
+## Interrupted Run Recovery
+
+If a prior setup run was interrupted, inspect leftover setup processes before rerunning installers:
+
+```powershell
+Get-CimInstance Win32_Process | Where-Object {
+  $_.CommandLine -like '*Install-WslVibecoding.ps1*' -or
+  $_.CommandLine -like '*bootstrap-ubuntu-vibecoding*'
+}
+```
+
+Only stop matching processes after the user confirms they are stale:
+
+```powershell
+Stop-Process -Id <pid> -Force
 ```

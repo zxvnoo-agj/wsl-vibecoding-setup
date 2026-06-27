@@ -8,9 +8,11 @@ This skill helps an agent plan, automate, or guide:
 
 - WSL installation and version checks
 - Ubuntu installation and first-launch account setup
+- Visible WSL/Ubuntu installation handoff for long silent downloads
 - WSL mirrored networking and connectivity tests
 - Node.js, npm, and npm registry mirror setup
 - Agent CLI selection: OpenCode, Codex CLI, or Claude Code
+- Idempotent reruns, interrupted-run recovery, root-user repair guidance, and final healthchecks
 - VS Code Remote - WSL setup
 - Linux-native project directory recommendations
 - Desktop launcher generation for quickly entering the WSL environment
@@ -88,6 +90,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 The script checks WSL, installs Ubuntu when needed, configures mirrored WSL networking, installs the VS Code Remote - WSL extension when `code` is available, runs the Ubuntu bootstrap script, and creates a Desktop launcher.
 
+For `wsl --install`, the script opens a visible PowerShell installer window by default. Ubuntu downloads can be silent for several minutes; watch that window and avoid starting a second install while one is still running.
+
 Choose agent CLIs explicitly:
 
 ```powershell
@@ -121,6 +125,8 @@ bash scripts/bootstrap-ubuntu-vibecoding.sh \
 
 The bootstrap installs common developer tools, nvm, Node.js, npm mirror configuration, optional GitHub CLI, optional AI agent CLIs, and a `vibecoding-health` helper.
 
+Optional agent CLI installers are isolated stages. If one of them fails, the base environment can still be complete, and the failed CLI can be retried after fixing network or installer issues. Codex CLI falls back to `npm install -g @openai/codex` when the standalone installer fails and npm is available.
+
 ## Manual Steps The Agent Should Guide
 
 Some steps cannot be safely automated by an agent:
@@ -131,6 +137,7 @@ Some steps cannot be safely automated by an agent:
 - Browser/device login for GitHub, Codex, OpenCode, or Claude
 - Secret and API key handling
 - User-specific proxy or mirror choices
+- Stopping leftover setup processes after an interrupted run
 
 When automation cannot proceed, the skill tells the agent to provide exact commands, success criteria, and the output the user should send back.
 
@@ -160,6 +167,8 @@ Inside Ubuntu:
 ```bash
 vibecoding-health
 ```
+
+The healthcheck prints the Linux username, Git/Node/npm/ripgrep versions, npm registry, selected CLI versions, `command -v codex`, Node/npm paths, and `~/code` status.
 
 ## Chinese README
 

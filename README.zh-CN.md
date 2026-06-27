@@ -8,9 +8,11 @@
 
 - WSL 安装检查与版本检查
 - Ubuntu 下载、安装与首次账号密码设置
+- 长时间静默的 WSL/Ubuntu 安装可见窗口交接
 - WSL mirrored networking 配置与 curl 连通性测试
 - Node.js、npm 与 npm mirror 配置
-- Agent CLI 选择安装：OpenCode、Codex CLI、Claude Code
+- Agent CLI 选择安装：OpenCode、Codex CLI 或 Claude Code
+- 中断恢复、幂等重跑、root 默认用户修复指引和最终健康检查
 - VS Code Remote - WSL 插件配置提示
 - 建议项目文件放在 WSL 文件系统中
 - 在桌面生成一键进入 WSL 环境的启动脚本
@@ -41,7 +43,7 @@ git clone https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git "$env:USERPROFI
 
 如果你的 Agent 使用其他 skills/plugins 目录，请克隆到该 Agent 配置的目录，并保持目录名为 `wsl-vibecoding-setup`。
 
-如果你已经把仓库下载到本地，也可以直接复制整个目录：
+如果仓库已经下载到本地，也可以直接复制整个目录：
 
 ```powershell
 Copy-Item -Recurse -Force . "$env:USERPROFILE\.codex\skills\wsl-vibecoding-setup"
@@ -59,8 +61,7 @@ Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environm
 
 ```text
 请把 https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git 安装为本机 Agent skill。
-如果我的 Agent 使用 Codex-compatible skill 布局，请在 Windows 上克隆到 %USERPROFILE%\.codex\skills\wsl-vibecoding-setup，
-在 macOS/Linux 上克隆到 ~/.codex/skills/wsl-vibecoding-setup。
+如果我的 Agent 使用 Codex-compatible skill 布局，请在 Windows 上克隆到 %USERPROFILE%\.codex\skills\wsl-vibecoding-setup，或在 macOS/Linux 上克隆到 ~/.codex/skills/wsl-vibecoding-setup。
 如果我的 Agent 使用其他 skills/plugins 目录，请使用该 Agent 配置的目录。
 克隆后请确认 SKILL.md 存在，并告诉我如何调用这个 skill。
 ```
@@ -68,8 +69,7 @@ Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environm
 如果仓库已经下载到本地，可以让 Agent 使用：
 
 ```text
-请把当前仓库根目录复制到我的 Agent skills 目录，并命名为 wsl-vibecoding-setup。
-不要只复制 SKILL.md；必须保留 agents/、references/ 和 scripts/ 目录。
+请把当前仓库根目录复制到我的 Agent skills 目录，并命名为 wsl-vibecoding-setup。不要只复制 SKILL.md；必须保留 agents/、references/ 和 scripts/ 目录。
 ```
 
 安装完成后应看到：
@@ -93,6 +93,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
 脚本会检查 WSL、按需安装 Ubuntu、配置 WSL mirrored networking、在检测到 VS Code 时安装 Remote - WSL 插件、运行 Ubuntu bootstrap，并在桌面生成启动脚本。
+
+涉及 `wsl --install` 时，脚本默认打开一个可见 PowerShell 安装窗口。Ubuntu 下载可能长时间没有输出，这是正常情况；请观察该窗口，不要因为静默就启动第二个安装。
 
 明确选择要安装的 Agent CLI：
 
@@ -127,6 +129,8 @@ bash scripts/bootstrap-ubuntu-vibecoding.sh \
 
 该脚本会安装常用开发工具、nvm、Node.js、npm mirror、可选 GitHub CLI、可选 AI Agent CLI，并生成 `vibecoding-health` 健康检查命令。
 
+可选 Agent CLI 被拆成独立阶段。如果某个 CLI 安装失败，基础环境仍可能已经完成，可以修复网络或安装器问题后单独重试。Codex CLI 的 standalone installer 失败时，会在 npm 可用的情况下 fallback 到 `npm install -g @openai/codex`。
+
 ## 需要用户手动完成的步骤
 
 以下步骤通常不能由 Agent 直接完成，skill 会引导用户操作：
@@ -137,6 +141,7 @@ bash scripts/bootstrap-ubuntu-vibecoding.sh \
 - GitHub、Codex CLI、OpenCode、Claude Code 的浏览器或设备码登录
 - 密钥、Token、API Key 等敏感信息处理
 - 用户自己的代理和镜像源选择
+- 用户中断后确认并停止残留安装进程
 
 当 Agent 没有权限继续时，它应该给出明确命令、成功标准，以及需要用户返回的输出或错误信息。
 
@@ -153,19 +158,21 @@ cd ~/code
 
 ## 验证方式
 
-在 Windows 中：
+从 Windows 运行：
 
 ```powershell
 wsl.exe --status
 wsl.exe --list --verbose
-wsl.exe -d Ubuntu-24.04 -- bash -lc 'uname -a; git --version; node -v; npm -v; npm config get registry'
+wsl.exe -d Ubuntu-24.04 -- bash -lc 'id -un; git --version; node -v; npm -v; npm config get registry; rg --version | head -n 1; command -v codex || true; codex --version 2>/dev/null || true; ls -ld ~/code'
 ```
 
-在 Ubuntu 中：
+在 Ubuntu 中运行：
 
 ```bash
 vibecoding-health
 ```
+
+健康检查会打印 Linux 用户名、Git/Node/npm/ripgrep 版本、npm registry、所选 CLI 版本、`command -v codex`、Node/npm 路径和 `~/code` 状态。
 
 ## 英文 README
 
