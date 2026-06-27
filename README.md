@@ -1,5 +1,7 @@
 # WSL Vibecoding Setup Skill
 
+[English](README.md) | [中文](README.zh-CN.md)
+
 Codex skill for setting up a Windows 10/11 WSL 2 Ubuntu development environment for AI-assisted coding workflows.
 
 This skill helps Codex plan, automate, or guide:
@@ -47,6 +49,31 @@ Restart Codex or start a new thread so the skill list refreshes. You can then in
 
 ```text
 Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environment.
+```
+
+## Install With An Agent
+
+Give this prompt to Codex or another terminal-capable coding agent:
+
+```text
+Install the Codex skill from https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git into my local Codex skills directory.
+Clone it to %USERPROFILE%\.codex\skills\wsl-vibecoding-setup on Windows, or ~/.codex/skills/wsl-vibecoding-setup on macOS/Linux.
+After cloning, verify that SKILL.md exists and tell me how to invoke $wsl-vibecoding-setup.
+```
+
+For an already-cloned repository, ask the agent:
+
+```text
+Install this repository as a Codex skill by copying the repository root to my Codex skills directory as wsl-vibecoding-setup. Do not copy only SKILL.md; preserve agents/, references/, and scripts/.
+```
+
+Expected result:
+
+```text
+~/.codex/skills/wsl-vibecoding-setup/SKILL.md
+~/.codex/skills/wsl-vibecoding-setup/agents/openai.yaml
+~/.codex/skills/wsl-vibecoding-setup/references/
+~/.codex/skills/wsl-vibecoding-setup/scripts/
 ```
 
 ## Automated Setup
