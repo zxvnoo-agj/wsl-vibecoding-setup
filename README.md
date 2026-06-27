@@ -2,9 +2,9 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-Codex skill for setting up a Windows 10/11 WSL 2 Ubuntu development environment for AI-assisted coding workflows.
+Agent skill for setting up a Windows 10/11 WSL 2 Ubuntu development environment for AI-assisted coding workflows.
 
-This skill helps Codex plan, automate, or guide:
+This skill helps an agent plan, automate, or guide:
 
 - WSL installation and version checks
 - Ubuntu installation and first-launch account setup
@@ -32,7 +32,7 @@ wsl-vibecoding-setup/
 
 ## Install The Skill
 
-Clone this repository into your Codex skills directory:
+Clone this repository into your agent skills directory. For agents that support the Codex-compatible skill layout, use:
 
 ```powershell
 mkdir "$env:USERPROFILE\.codex\skills" -Force
@@ -45,7 +45,7 @@ If you already cloned it elsewhere, copy the folder:
 Copy-Item -Recurse -Force . "$env:USERPROFILE\.codex\skills\wsl-vibecoding-setup"
 ```
 
-Restart Codex or start a new thread so the skill list refreshes. You can then invoke it with:
+Restart your agent or start a new thread/session so the skill list refreshes. You can then invoke it with:
 
 ```text
 Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environment.
@@ -53,18 +53,19 @@ Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environm
 
 ## Install With An Agent
 
-Give this prompt to Codex or another terminal-capable coding agent:
+Give this prompt to any terminal-capable coding agent:
 
 ```text
-Install the Codex skill from https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git into my local Codex skills directory.
-Clone it to %USERPROFILE%\.codex\skills\wsl-vibecoding-setup on Windows, or ~/.codex/skills/wsl-vibecoding-setup on macOS/Linux.
-After cloning, verify that SKILL.md exists and tell me how to invoke $wsl-vibecoding-setup.
+Install the agent skill from https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git into my local agent skills directory.
+If my agent uses the Codex-compatible skill layout, clone it to %USERPROFILE%\.codex\skills\wsl-vibecoding-setup on Windows, or ~/.codex/skills/wsl-vibecoding-setup on macOS/Linux.
+If my agent uses another skills/plugins directory, use that configured directory instead.
+After cloning, verify that SKILL.md exists and tell me how to invoke the skill.
 ```
 
 For an already-cloned repository, ask the agent:
 
 ```text
-Install this repository as a Codex skill by copying the repository root to my Codex skills directory as wsl-vibecoding-setup. Do not copy only SKILL.md; preserve agents/, references/, and scripts/.
+Install this repository as an agent skill by copying the repository root to my agent skills directory as wsl-vibecoding-setup. Do not copy only SKILL.md; preserve agents/, references/, and scripts/.
 ```
 
 Expected result:
@@ -120,9 +121,9 @@ bash scripts/bootstrap-ubuntu-vibecoding.sh \
 
 The bootstrap installs common developer tools, nvm, Node.js, npm mirror configuration, optional GitHub CLI, optional AI agent CLIs, and a `vibecoding-health` helper.
 
-## Manual Steps Codex Should Guide
+## Manual Steps The Agent Should Guide
 
-Some steps cannot be safely automated by Codex:
+Some steps cannot be safely automated by an agent:
 
 - BIOS/UEFI virtualization settings
 - UAC approval and Administrator PowerShell
@@ -131,7 +132,7 @@ Some steps cannot be safely automated by Codex:
 - Secret and API key handling
 - User-specific proxy or mirror choices
 
-When automation cannot proceed, the skill tells Codex to provide exact commands, success criteria, and the output the user should send back.
+When automation cannot proceed, the skill tells the agent to provide exact commands, success criteria, and the output the user should send back.
 
 ## Recommended Project Location
 

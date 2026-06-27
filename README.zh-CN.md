@@ -2,9 +2,9 @@
 
 [English](README.md) | [中文](README.zh-CN.md)
 
-这是一个 Codex skill，用于在 Windows 10/11 上配置面向 AI 辅助编程的 WSL 2 + Ubuntu 开发环境。
+这是一个 Agent skill，用于在 Windows 10/11 上配置面向 AI 辅助编程的 WSL 2 + Ubuntu 开发环境。
 
-它可以帮助 Codex 自动化或引导完成：
+它可以帮助 Agent 自动化或引导完成：
 
 - WSL 安装检查与版本检查
 - Ubuntu 下载、安装与首次账号密码设置
@@ -32,12 +32,14 @@ wsl-vibecoding-setup/
 
 ## 安装 Skill
 
-将仓库克隆到 Codex 的 skills 目录：
+将仓库克隆到你的 Agent skills 目录。对于支持 Codex-compatible skill 布局的 Agent，可以使用：
 
 ```powershell
 mkdir "$env:USERPROFILE\.codex\skills" -Force
 git clone https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git "$env:USERPROFILE\.codex\skills\wsl-vibecoding-setup"
 ```
+
+如果你的 Agent 使用其他 skills/plugins 目录，请克隆到该 Agent 配置的目录，并保持目录名为 `wsl-vibecoding-setup`。
 
 如果你已经把仓库下载到本地，也可以直接复制整个目录：
 
@@ -45,7 +47,7 @@ git clone https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git "$env:USERPROFI
 Copy-Item -Recurse -Force . "$env:USERPROFILE\.codex\skills\wsl-vibecoding-setup"
 ```
 
-然后重启 Codex，或开启一个新线程，让 skill 列表刷新。之后可以这样调用：
+然后重启你的 Agent，或开启一个新线程/会话，让 skill 列表刷新。之后可以这样调用：
 
 ```text
 Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environment.
@@ -53,19 +55,20 @@ Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environm
 
 ## 给 Agent 的安装方式
 
-可以把下面这段提示词交给 Codex 或其他能操作终端的编程 Agent：
+可以把下面这段提示词交给任意能够操作终端的编程 Agent：
 
 ```text
-请把 https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git 安装为本机 Codex skill。
-在 Windows 上克隆到 %USERPROFILE%\.codex\skills\wsl-vibecoding-setup；
+请把 https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git 安装为本机 Agent skill。
+如果我的 Agent 使用 Codex-compatible skill 布局，请在 Windows 上克隆到 %USERPROFILE%\.codex\skills\wsl-vibecoding-setup，
 在 macOS/Linux 上克隆到 ~/.codex/skills/wsl-vibecoding-setup。
-克隆后请确认 SKILL.md 存在，并告诉我如何调用 $wsl-vibecoding-setup。
+如果我的 Agent 使用其他 skills/plugins 目录，请使用该 Agent 配置的目录。
+克隆后请确认 SKILL.md 存在，并告诉我如何调用这个 skill。
 ```
 
 如果仓库已经下载到本地，可以让 Agent 使用：
 
 ```text
-请把当前仓库根目录复制到我的 Codex skills 目录，并命名为 wsl-vibecoding-setup。
+请把当前仓库根目录复制到我的 Agent skills 目录，并命名为 wsl-vibecoding-setup。
 不要只复制 SKILL.md；必须保留 agents/、references/ 和 scripts/ 目录。
 ```
 
@@ -77,6 +80,8 @@ Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environm
 ~/.codex/skills/wsl-vibecoding-setup/references/
 ~/.codex/skills/wsl-vibecoding-setup/scripts/
 ```
+
+如果你的 Agent 使用其他 skills/plugins 目录，上面的 `.codex/skills` 路径应替换为该 Agent 的实际配置路径。
 
 ## 自动化配置
 
@@ -124,16 +129,16 @@ bash scripts/bootstrap-ubuntu-vibecoding.sh \
 
 ## 需要用户手动完成的步骤
 
-以下步骤通常不能由 Codex 直接完成，skill 会引导用户操作：
+以下步骤通常不能由 Agent 直接完成，skill 会引导用户操作：
 
 - BIOS/UEFI 中开启虚拟化
 - UAC 授权与管理员 PowerShell
 - Ubuntu 首次启动时创建用户名和密码
-- GitHub、Codex、OpenCode、Claude 的浏览器或设备码登录
+- GitHub、Codex CLI、OpenCode、Claude Code 的浏览器或设备码登录
 - 密钥、Token、API Key 等敏感信息处理
 - 用户自己的代理和镜像源选择
 
-当 Codex 没有权限继续时，它应该给出明确命令、成功标准，以及需要用户返回的输出或错误信息。
+当 Agent 没有权限继续时，它应该给出明确命令、成功标准，以及需要用户返回的输出或错误信息。
 
 ## 项目文件位置建议
 
