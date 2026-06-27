@@ -1,175 +1,25 @@
 # WSL Vibecoding Setup Skill
 
-[English](README.md) | [中文](README.zh-CN.md)
+[中文](README.md) | [English](README.en.md)
 
-Agent skill for setting up a Windows 10/11 WSL 2 Ubuntu development environment for AI-assisted coding workflows.
+这是一个用于 Windows 10/11 的 Agent skill，帮助 Agent 为用户规划、自动化或引导完成 WSL 2 + Ubuntu 的 AI 辅助编程环境配置。
 
-This skill helps an agent plan, automate, or guide:
+它适合用于把一台 Windows 电脑整理成更稳定的 Linux-native 开发环境，包括 WSL/Ubuntu、Node.js、npm mirror、常见 Agent CLI、VS Code Remote - WSL、桌面启动脚本和最终健康检查。
 
-- WSL installation and version checks
-- Ubuntu installation and first-launch account setup
-- Visible WSL/Ubuntu installation handoff for long silent downloads
-- WSL mirrored networking and connectivity tests
-- Node.js, npm, and npm registry mirror setup
-- Agent CLI selection: OpenCode, Codex CLI, or Claude Code
-- Idempotent reruns, interrupted-run recovery, root-user repair guidance, and final healthchecks
-- VS Code Remote - WSL setup
-- Linux-native project directory recommendations
-- Desktop launcher generation for quickly entering the WSL environment
+## 主要优点
 
-## Contents
+- **流程清晰**：按 WSL 安装、Ubuntu 初始化、Node/npm、Agent CLI、编辑器、项目目录和启动器拆分。
+- **更适合人机交接**：遇到 UAC、首次 Ubuntu 用户创建、登录鉴权等 Agent 无法代劳的步骤时，会给出明确指引。
+- **可重复执行**：每个关键阶段都会重新判断当前状态，减少重复安装和半途失败后的混乱。
+- **更稳的 WSL 安装体验**：长时间的 `wsl --install` 默认使用可见窗口，避免把静默下载误判为卡住。
+- **失败可恢复**：可选 CLI 安装失败不会否定基础环境成果，可以从最近成功阶段继续。
+- **面向真实开发**：强调项目放在 WSL 文件系统中，检查 Windows PATH 污染，并提供固定健康检查。
+
+## 给 Agent 的安装提示
 
 ```text
-wsl-vibecoding-setup/
-  SKILL.md
-  agents/openai.yaml
-  references/
-    manual-guidance.md
-    research-notes.md
-    troubleshooting.md
-  scripts/
-    Install-WslVibecoding.ps1
-    bootstrap-ubuntu-vibecoding.sh
+请把 https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git 安装为本机 Agent skill。
+如果我的 Agent 使用 Codex-compatible skill 布局，请在 Windows 上克隆到 %USERPROFILE%\.codex\skills\wsl-vibecoding-setup，或在 macOS/Linux 上克隆到 ~/.codex/skills/wsl-vibecoding-setup。
+如果我的 Agent 使用其他 skills/plugins 目录，请使用该 Agent 配置的目录。
+克隆后请确认 SKILL.md 存在，并告诉我如何调用这个 skill。
 ```
-
-## Install The Skill
-
-Clone this repository into your agent skills directory. For agents that support the Codex-compatible skill layout, use:
-
-```powershell
-mkdir "$env:USERPROFILE\.codex\skills" -Force
-git clone https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git "$env:USERPROFILE\.codex\skills\wsl-vibecoding-setup"
-```
-
-If you already cloned it elsewhere, copy the folder:
-
-```powershell
-Copy-Item -Recurse -Force . "$env:USERPROFILE\.codex\skills\wsl-vibecoding-setup"
-```
-
-Restart your agent or start a new thread/session so the skill list refreshes. You can then invoke it with:
-
-```text
-Use $wsl-vibecoding-setup to configure my Windows WSL Ubuntu vibecoding environment.
-```
-
-## Install With An Agent
-
-Give this prompt to any terminal-capable coding agent:
-
-```text
-Install the agent skill from https://github.com/zxvnoo-agj/wsl-vibecoding-setup.git into my local agent skills directory.
-If my agent uses the Codex-compatible skill layout, clone it to %USERPROFILE%\.codex\skills\wsl-vibecoding-setup on Windows, or ~/.codex/skills/wsl-vibecoding-setup on macOS/Linux.
-If my agent uses another skills/plugins directory, use that configured directory instead.
-After cloning, verify that SKILL.md exists and tell me how to invoke the skill.
-```
-
-For an already-cloned repository, ask the agent:
-
-```text
-Install this repository as an agent skill by copying the repository root to my agent skills directory as wsl-vibecoding-setup. Do not copy only SKILL.md; preserve agents/, references/, and scripts/.
-```
-
-Expected result:
-
-```text
-~/.codex/skills/wsl-vibecoding-setup/SKILL.md
-~/.codex/skills/wsl-vibecoding-setup/agents/openai.yaml
-~/.codex/skills/wsl-vibecoding-setup/references/
-~/.codex/skills/wsl-vibecoding-setup/scripts/
-```
-
-## Automated Setup
-
-From an elevated PowerShell session:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\scripts\Install-WslVibecoding.ps1 -Distro Ubuntu-24.04
-```
-
-The script checks WSL, installs Ubuntu when needed, configures mirrored WSL networking, installs the VS Code Remote - WSL extension when `code` is available, runs the Ubuntu bootstrap script, and creates a Desktop launcher.
-
-For `wsl --install`, the script opens a visible PowerShell installer window by default. Ubuntu downloads can be silent for several minutes; watch that window and avoid starting a second install while one is still running.
-
-Choose agent CLIs explicitly:
-
-```powershell
-.\scripts\Install-WslVibecoding.ps1 -Distro Ubuntu-24.04 -AgentCli opencode,codex
-.\scripts\Install-WslVibecoding.ps1 -Distro Ubuntu-24.04 -AgentCli claude
-.\scripts\Install-WslVibecoding.ps1 -Distro Ubuntu-24.04 -AgentCli none
-```
-
-Useful options:
-
-```powershell
-.\scripts\Install-WslVibecoding.ps1 -NpmRegistry https://registry.npmmirror.com
-.\scripts\Install-WslVibecoding.ps1 -SkipWslMirrorConfig
-.\scripts\Install-WslVibecoding.ps1 -SkipNetworkTest
-.\scripts\Install-WslVibecoding.ps1 -DryRun
-```
-
-## Ubuntu-Only Bootstrap
-
-Inside Ubuntu:
-
-```bash
-bash scripts/bootstrap-ubuntu-vibecoding.sh \
-  --node-version 24 \
-  --project-dir ~/code \
-  --npm-registry https://registry.npmmirror.com \
-  --install-opencode \
-  --install-codex \
-  --install-claude
-```
-
-The bootstrap installs common developer tools, nvm, Node.js, npm mirror configuration, optional GitHub CLI, optional AI agent CLIs, and a `vibecoding-health` helper.
-
-Optional agent CLI installers are isolated stages. If one of them fails, the base environment can still be complete, and the failed CLI can be retried after fixing network or installer issues. Codex CLI falls back to `npm install -g @openai/codex` when the standalone installer fails and npm is available.
-
-## Manual Steps The Agent Should Guide
-
-Some steps cannot be safely automated by an agent:
-
-- BIOS/UEFI virtualization settings
-- UAC approval and Administrator PowerShell
-- First Ubuntu username and password creation
-- Browser/device login for GitHub, Codex, OpenCode, or Claude
-- Secret and API key handling
-- User-specific proxy or mirror choices
-- Stopping leftover setup processes after an interrupted run
-
-When automation cannot proceed, the skill tells the agent to provide exact commands, success criteria, and the output the user should send back.
-
-## Recommended Project Location
-
-Keep active projects inside the WSL filesystem:
-
-```bash
-mkdir -p ~/code
-cd ~/code
-```
-
-Avoid running package managers, tests, or file watchers from `/mnt/c/...` unless you specifically need Windows filesystem access.
-
-## Validation
-
-From Windows:
-
-```powershell
-wsl.exe --status
-wsl.exe --list --verbose
-wsl.exe -d Ubuntu-24.04 -- bash -lc 'uname -a; git --version; node -v; npm -v; npm config get registry'
-```
-
-Inside Ubuntu:
-
-```bash
-vibecoding-health
-```
-
-The healthcheck prints the Linux username, Git/Node/npm/ripgrep versions, npm registry, selected CLI versions, `command -v codex`, Node/npm paths, and `~/code` status.
-
-## Chinese README
-
-See [README.zh-CN.md](README.zh-CN.md).
